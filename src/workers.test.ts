@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { WorkerState } from './scene/worker-state.ts';
 import { Workstation } from './scene/workstation.ts';
 import { WorkerAvatar } from './scene/worker-avatar.ts';
+import { OfficeWorkersManager } from './scene/office-workers.ts';
 import type { WorkerConfig, WorkerStatus, WorkstationConfig } from './types/index.ts';
 
 test('WorkerState manages worker identity and transitions status', () => {
@@ -136,5 +137,38 @@ test('WorkerAvatar builds seated avatar model, supports status and animations', 
   avatar.setSelected(false);
   assert.equal(avatar.isSelected, false);
 });
+
+test('OfficeWorkersManager sets up workstations pod layout and manages workers', () => {
+  const manager = new OfficeWorkersManager();
+
+  assert.ok(manager.group, 'manager group exists');
+  assert.equal(manager.workstations.length, 4, 'creates 4 workstations in pod layout');
+  assert.equal(manager.workers.length, 4, 'creates 4 worker avatars');
+
+  // Verify finding by id
+  const ada = manager.getWorker('worker-ada');
+  assert.ok(ada, 'Ada worker exists');
+  assert.equal(ada.state.name, 'Ada');
+
+  const linus = manager.getWorker('worker-linus');
+  assert.ok(linus, 'Linus worker exists');
+  assert.equal(linus.state.name, 'Linus');
+
+  // Status updates
+  manager.setWorkerStatus('worker-ada', 'reviewing');
+  assert.equal(ada.state.status, 'reviewing');
+
+  // Workstation highlight
+  const ws0 = manager.getWorkstation('ws-0');
+  assert.ok(ws0, 'workstation 0 exists');
+  manager.highlightWorkstation('ws-0', true);
+  assert.equal(ws0.isHighlighted, true);
+  manager.highlightWorkstation('ws-0', false);
+  assert.equal(ws0.isHighlighted, false);
+
+  // Update animation loop
+  manager.update(0.016);
+});
+
 
 
