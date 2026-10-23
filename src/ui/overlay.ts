@@ -1,4 +1,6 @@
 import type { ActivityEvent, CameraPresetName, HUDState, OfficeKPIs } from '../types/index.ts';
+import { ChatStore } from '../chat/store.ts';
+import { ChatPanel } from './chat.ts';
 
 export function formatEventTime(timestamp: number): string {
   const d = new Date(timestamp);
@@ -22,7 +24,10 @@ export class UIOverlay {
 
   public onPresetSelect?: (preset: CameraPresetName) => void;
 
-  constructor(containerId: string = 'ui-overlay') {
+  public chatStore!: ChatStore;
+  public chatPanel!: ChatPanel;
+
+  constructor(containerId: string = 'ui-overlay', chatStore?: ChatStore) {
     if (typeof document === 'undefined') return;
 
     const el = document.getElementById(containerId);
@@ -35,7 +40,12 @@ export class UIOverlay {
       this.container = el;
     }
 
+    this.chatStore = chatStore || new ChatStore();
     this.render();
+
+    const panelsContainer = this.getPanelsContainer() || this.container;
+    this.chatPanel = new ChatPanel(this.chatStore);
+    this.chatPanel.mount(panelsContainer);
   }
 
   private render(): void {

@@ -64,6 +64,32 @@ export interface HUDState {
   kpis?: OfficeKPIs;
 }
 
+export type ChatSenderRole = 'manager' | 'worker' | 'system';
+
+export interface ChatAttachment {
+  id: string;
+  name: string;
+  type: string;
+  dataUrl: string;
+  size?: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: ChatSenderRole;
+  senderName: string;
+  text: string;
+  attachment?: ChatAttachment;
+  timestamp: number;
+}
+
+export interface SendMessageOptions {
+  text?: string;
+  attachment?: ChatAttachment;
+  sender?: ChatSenderRole;
+  senderName?: string;
+}
+
 export type WorkerStatus = 'idle' | 'coding' | 'reviewing' | 'testing';
 
 export interface WorkerProfile {
