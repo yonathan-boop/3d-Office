@@ -1,8 +1,10 @@
 import * as THREE from 'three';
-import { OfficeRoom } from './scene/room';
-import { OfficeLighting } from './scene/lighting';
-import { OfficeCameraControls } from './controls/camera';
-import { UIOverlay } from './ui/overlay';
+import { OfficeRoom } from './scene/room.ts';
+import { OfficeLighting } from './scene/lighting.ts';
+import { OfficeCameraControls } from './controls/camera.ts';
+import { UIOverlay } from './ui/overlay.ts';
+import { OfficeStateManager } from './state/officeState.ts';
+import { StatusBadgeOverlay } from './ui/statusBadges.ts';
 import { DeskMonitorStation } from './scene/deskMonitor.ts';
 import { TerminalOverlay } from './ui/terminal.ts';
 import { workerStore } from './state/workerState.ts';
@@ -18,6 +20,8 @@ export class OfficeApp {
   public lighting: OfficeLighting;
   public workstations: DeskMonitorStation;
   public ui: UIOverlay;
+  public statusBadges: StatusBadgeOverlay;
+  public stateManager: OfficeStateManager;
   public terminal: TerminalOverlay;
   public workersManager: OfficeWorkersManager;
   public selectionManager: WorkerSelectionManager;
@@ -68,9 +72,28 @@ export class OfficeApp {
     // Camera & dampened OrbitControls
     this.cameraControls = new OfficeCameraControls(canvas);
 
+    // Office State Manager
+    this.stateManager = new OfficeStateManager();
+
+    // Floating In-World Status Badges Overlay
+    this.statusBadges = new StatusBadgeOverlay();
+
     // UI Overlay & Terminal Window
     this.ui = new UIOverlay();
     this.ui.update({ agentCount: this.workersManager.workers.length });
+    this.ui.setActivityEvents(this.stateManager.getEvents());
+    this.ui.updateKPIs(this.stateManager.getKPIs());
+
+    // Connect camera preset buttons
+    this.ui.onPresetSelect = (preset) => {
+      this.cameraControls.transitionTo(preset);
+    };
+
+    // State manager subscription updates HUD and 3D Command Wall
+    this.stateManager.subscribe(() => {
+      this.ui.updateKPIs(this.stateManager.getKPIs());
+      this.room.commandWall.update(this.stateManager.getKPIs(), this.stateManager.getEvents());
+    });
 
     this.terminal = new TerminalOverlay({
       store: workerStore,
@@ -94,6 +117,27 @@ export class OfficeApp {
       uiOverlay: this.ui,
     });
 
+    // Sync worker positions for status badges with 3D avatar coordinates
+    this.scene.updateMatrixWorld(true);
+    const workerIdMap: Record<string, string> = {
+      ada: 'worker-ada',
+      linus: 'worker-linus',
+      grace: 'worker-grace',
+      alan: 'worker-alan',
+    };
+    for (const [stateId, avatarId] of Object.entries(workerIdMap)) {
+      const avatar = this.workersManager.getWorker(avatarId);
+      const stateWorker = this.stateManager.getWorker(stateId);
+      if (avatar && stateWorker) {
+        const wp = new THREE.Vector3();
+        avatar.hitBox.getWorldPosition(wp);
+        stateWorker.position = [wp.x, wp.y, wp.z];
+      }
+    }
+
+    // Start background activity feed simulation
+    this.setupSimulation();
+
     // Raycasting for interactive monitor clicks
     this.raycaster = new THREE.Raycaster();
     this.pointer = new THREE.Vector2();
@@ -104,6 +148,67 @@ export class OfficeApp {
 
     // Event listeners
     window.addEventListener('resize', this.onResize);
+  }
+
+  private simCycle: number = 0;
+  private simTimer: number | null = null;
+
+  private setupSimulation(): void {
+    if (typeof window === 'undefined') return;
+
+    const scenarios = [
+      () => {
+        this.stateManager.setWorkerStatus('alan', 'coding', 'Task #5 HUD responsiveness');
+        const evt = this.stateManager.logEvent({
+          workerName: 'Agent Alan',
+          action: 'started task #5 (HUD responsiveness)',
+          type: 'task_started',
+        });
+        this.ui.addActivityEvent(evt);
+      },
+      () => {
+        this.stateManager.setWorkerStatus('ada', 'testing', 'Unit test assertions for #2');
+        const evt = this.stateManager.logEvent({
+          workerName: 'Agent Ada',
+          action: 'ran unit test suite (34 passing)',
+          type: 'test_run',
+        });
+        this.ui.addActivityEvent(evt);
+      },
+      () => {
+        this.stateManager.setWorkerStatus('linus', 'reviewing', 'PR #4 Status Dashboard');
+        const evt = this.stateManager.logEvent({
+          workerName: 'Agent Linus',
+          action: 'merged PR #4 (Real-time activity monitors)',
+          type: 'pr_merged',
+        });
+        this.ui.addActivityEvent(evt);
+      },
+      () => {
+        this.stateManager.setWorkerStatus('grace', 'coding', 'Workstation 3D avatar rig');
+        const evt = this.stateManager.logEvent({
+          workerName: 'Agent Grace',
+          action: 'committed 4 files to feature branch',
+          type: 'build_passed',
+        });
+        this.ui.addActivityEvent(evt);
+      },
+      () => {
+        this.stateManager.setWorkerStatus('alan', 'reviewing', 'PR #2 Avatars & Workstations');
+        const evt = this.stateManager.logEvent({
+          workerName: 'Agent Alan',
+          action: 'approved review for PR #2',
+          type: 'review_completed',
+        });
+        this.ui.addActivityEvent(evt);
+      },
+    ];
+
+    this.simTimer = window.setInterval(() => {
+      const scenario = scenarios[this.simCycle % scenarios.length];
+      this.simCycle++;
+      scenario();
+    }, 9000);
   }
 
   private onCanvasClick = (event: MouseEvent): void => {
@@ -162,7 +267,10 @@ export class OfficeApp {
     this.workstations.update();
 
     // Update dampened controls
-    this.cameraControls.update();
+    this.cameraControls.update(delta);
+
+    // Update floating status badges pinned above workers
+    this.statusBadges.update(this.cameraControls.camera, this.stateManager.getWorkers());
 
     // Update worker avatars animation loops
     this.workersManager.update(delta);
@@ -178,7 +286,9 @@ export class OfficeApp {
       if (delta > 0) {
         this.currentFps = 1 / delta;
       }
+      this.stateManager.setFps(this.currentFps);
       this.ui.update({ fps: this.currentFps });
+      this.room.commandWall.update(this.stateManager.getKPIs(), this.stateManager.getEvents());
       this.lastFpsUpdate = now;
       this.frameCount = 0;
     }
@@ -195,9 +305,14 @@ export class OfficeApp {
 
   public destroy(): void {
     this.stop();
+    if (this.simTimer !== null) {
+      window.clearInterval(this.simTimer);
+      this.simTimer = null;
+    }
     this.canvas.removeEventListener('click', this.onCanvasClick);
     this.selectionManager.destroy();
     window.removeEventListener('resize', this.onResize);
+    this.statusBadges.destroy();
     this.workstations.destroy();
     this.terminal.destroy();
     this.renderer.dispose();
