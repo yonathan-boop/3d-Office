@@ -416,11 +416,11 @@ export class ChatPanel {
       .map((msg) => this.renderMessageItem(msg))
       .join('');
 
-    // Attach click listeners to all thumbnails
-    const thumbnails = this.messagesContainerEl.querySelectorAll<HTMLImageElement>('.chat-msg-thumbnail');
-    thumbnails.forEach((thumb) => {
-      thumb.addEventListener('click', () => {
-        const msgId = thumb.getAttribute('data-msg-id');
+    // Attach click listeners to all thumbnail containers
+    const thumbnailContainers = this.messagesContainerEl.querySelectorAll<HTMLElement>('.chat-thumbnail-container');
+    thumbnailContainers.forEach((container) => {
+      container.addEventListener('click', () => {
+        const msgId = container.getAttribute('data-msg-id');
         const targetMsg = messages.find((m) => m.id === msgId);
         if (targetMsg && targetMsg.attachment) {
           this.openLightbox(targetMsg.attachment);
@@ -439,12 +439,11 @@ export class ChatPanel {
     const attachmentHtml = msg.attachment
       ? `
       <div class="chat-msg-attachment">
-        <div class="chat-thumbnail-container" title="Click to view full image">
+        <div class="chat-thumbnail-container" data-msg-id="${msg.id}" title="Click to view full image" role="button" tabindex="0">
           <img
             src="${msg.attachment.dataUrl}"
             alt="${this.escapeHtml(msg.attachment.name)}"
             class="chat-msg-thumbnail"
-            data-msg-id="${msg.id}"
             loading="lazy"
           />
           <div class="chat-thumbnail-overlay">

@@ -453,6 +453,7 @@ html, body {
   opacity: 0;
   color: #fff;
   transition: opacity 0.15s ease;
+  pointer-events: none;
 }
 
 .chat-thumbnail-container:hover .chat-thumbnail-overlay {
