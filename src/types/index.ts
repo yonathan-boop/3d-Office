@@ -24,7 +24,34 @@ export interface HUDState {
   fps: number;
 }
 
-export type WorkerStatus = 'idle' | 'coding' | 'reviewing';
+export type WorkerStatus = 'idle' | 'coding' | 'reviewing' | 'testing';
+
+export interface WorkerProfile {
+  id: string;
+  name: string;
+  role: string;
+  status: WorkerStatus;
+  branch: string;
+  avatarColor: string;
+}
+
+export type TerminalLineType =
+  | 'command'
+  | 'output'
+  | 'thought'
+  | 'diff-add'
+  | 'diff-del'
+  | 'diff-header'
+  | 'success'
+  | 'error'
+  | 'system';
+
+export interface TerminalLine {
+  id: string;
+  timestamp: number;
+  type: TerminalLineType;
+  text: string;
+}
 
 export interface WorkerStats {
   currentTask: string;
