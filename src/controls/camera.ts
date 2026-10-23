@@ -13,12 +13,18 @@ export const DEFAULT_CAMERA_CONFIG: CameraConfig = {
 export class OfficeCameraControls {
   public camera: THREE.PerspectiveCamera;
   public controls: OrbitControls;
+  public initialConfig: CameraConfig;
+
+  private transitionTarget: THREE.Vector3 | null = null;
+  private transitionCamera: THREE.Vector3 | null = null;
+  private isTransitioning: boolean = false;
 
   constructor(
     domElement: HTMLElement,
     aspect: number = window.innerWidth / window.innerHeight,
     config: CameraConfig = DEFAULT_CAMERA_CONFIG
   ) {
+    this.initialConfig = config;
     this.camera = new THREE.PerspectiveCamera(
       config.fov,
       aspect,
@@ -48,7 +54,37 @@ export class OfficeCameraControls {
     this.controls.update();
   }
 
+  public focusOn(target: THREE.Vector3, cameraPosition?: THREE.Vector3): void {
+    this.transitionTarget = target.clone();
+    if (cameraPosition) {
+      this.transitionCamera = cameraPosition.clone();
+    }
+    this.isTransitioning = true;
+  }
+
+  public resetView(): void {
+    const target = new THREE.Vector3(...this.initialConfig.target);
+    const pos = new THREE.Vector3(...this.initialConfig.initialPosition);
+    this.focusOn(target, pos);
+  }
+
   public update(): void {
+    if (this.isTransitioning) {
+      if (this.transitionTarget) {
+        this.controls.target.lerp(this.transitionTarget, 0.08);
+      }
+      if (this.transitionCamera) {
+        this.camera.position.lerp(this.transitionCamera, 0.08);
+      }
+      if (
+        (!this.transitionTarget || this.controls.target.distanceTo(this.transitionTarget) < 0.02) &&
+        (!this.transitionCamera || this.camera.position.distanceTo(this.transitionCamera) < 0.02)
+      ) {
+        this.isTransitioning = false;
+        this.transitionTarget = null;
+        this.transitionCamera = null;
+      }
+    }
     this.controls.update();
   }
 
@@ -58,3 +94,4 @@ export class OfficeCameraControls {
     this.camera.updateProjectionMatrix();
   }
 }
+

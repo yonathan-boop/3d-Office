@@ -7,6 +7,8 @@ import { DeskMonitorStation } from './scene/deskMonitor.ts';
 import { TerminalOverlay } from './ui/terminal.ts';
 import { workerStore } from './state/workerState.ts';
 import { codeSimulator } from './simulator/codeStreamSimulator.ts';
+import { OfficeWorkersManager } from './scene/office-workers.ts';
+import { WorkerSelectionManager } from './interactions/selection.ts';
 
 export class OfficeApp {
   public scene: THREE.Scene;
@@ -17,6 +19,8 @@ export class OfficeApp {
   public workstations: DeskMonitorStation;
   public ui: UIOverlay;
   public terminal: TerminalOverlay;
+  public workersManager: OfficeWorkersManager;
+  public selectionManager: WorkerSelectionManager;
   public clock: THREE.Clock;
 
   private isRunning: boolean = false;
@@ -57,12 +61,16 @@ export class OfficeApp {
     this.lighting = new OfficeLighting(this.room.dimensions);
     this.scene.add(this.lighting.group);
 
+    // AI Coding Worker Pods & Workstations
+    this.workersManager = new OfficeWorkersManager();
+    this.scene.add(this.workersManager.group);
+
     // Camera & dampened OrbitControls
     this.cameraControls = new OfficeCameraControls(canvas);
 
     // UI Overlay & Terminal Window
     this.ui = new UIOverlay();
-    this.ui.update({ agentCount: workerStore.getWorkers().length });
+    this.ui.update({ agentCount: this.workersManager.workers.length });
 
     this.terminal = new TerminalOverlay({
       store: workerStore,
@@ -75,6 +83,15 @@ export class OfficeApp {
           }
         }
       },
+    });
+
+    // Interactive Worker Selection & Raycasting
+    this.selectionManager = new WorkerSelectionManager({
+      workersManager: this.workersManager,
+      canvas,
+      camera: this.cameraControls.camera,
+      cameraControls: this.cameraControls,
+      uiOverlay: this.ui,
     });
 
     // Raycasting for interactive monitor clicks
@@ -103,6 +120,14 @@ export class OfficeApp {
       const workerId = hit.object.userData?.workerId;
       if (workerId) {
         workerStore.selectWorker(workerId);
+        const avatarMap: Record<string, string> = {
+          ada: 'worker-ada',
+          linus: 'worker-linus',
+          hopper: 'worker-grace',
+          turing: 'worker-alan',
+        };
+        const avatarId = avatarMap[workerId] || `worker-${workerId}`;
+        this.selectionManager.selectWorker(avatarId);
         if (this.terminal.isMinimized()) {
           this.terminal.toggleMinimize();
         }
@@ -139,6 +164,9 @@ export class OfficeApp {
     // Update dampened controls
     this.cameraControls.update();
 
+    // Update worker avatars animation loops
+    this.workersManager.update(delta);
+
     // Render frame
     this.renderer.render(this.scene, this.cameraControls.camera);
   };
@@ -168,6 +196,7 @@ export class OfficeApp {
   public destroy(): void {
     this.stop();
     this.canvas.removeEventListener('click', this.onCanvasClick);
+    this.selectionManager.destroy();
     window.removeEventListener('resize', this.onResize);
     this.workstations.destroy();
     this.terminal.destroy();

@@ -56,12 +56,21 @@ export class WorkerStateStore {
     }
   }
 
+  private resolveWorkerId(id: string): string {
+    if (this.workers.has(id)) return id;
+    const stripped = id.toLowerCase().replace(/^worker-/, '');
+    if (this.workers.has(stripped)) return stripped;
+    if (stripped === 'grace') return 'hopper';
+    if (stripped === 'alan') return 'turing';
+    return id;
+  }
+
   public getWorkers(): WorkerProfile[] {
     return Array.from(this.workers.values());
   }
 
   public getWorker(id: string): WorkerProfile | undefined {
-    return this.workers.get(id);
+    return this.workers.get(this.resolveWorkerId(id));
   }
 
   public getSelectedWorker(): WorkerProfile | undefined {
@@ -69,15 +78,16 @@ export class WorkerStateStore {
   }
 
   public selectWorker(id: string, dispatchDomEvent: boolean = true): WorkerProfile | undefined {
-    const worker = this.workers.get(id);
+    const resolvedId = this.resolveWorkerId(id);
+    const worker = this.workers.get(resolvedId);
     if (!worker) return undefined;
 
-    this.selectedWorkerId = id;
+    this.selectedWorkerId = resolvedId;
     this.selectListeners.forEach((fn) => fn(worker));
 
     if (dispatchDomEvent && typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent('worker-selected', { detail: { workerId: id, worker } })
+        new CustomEvent('worker-selected', { detail: { workerId: resolvedId, worker } })
       );
     }
 
@@ -85,7 +95,7 @@ export class WorkerStateStore {
   }
 
   public setWorkerStatus(id: string, status: WorkerStatus): void {
-    const worker = this.workers.get(id);
+    const worker = this.workers.get(this.resolveWorkerId(id));
     if (!worker) return;
 
     worker.status = status;

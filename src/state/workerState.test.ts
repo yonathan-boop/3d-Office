@@ -40,3 +40,11 @@ test('WorkerStateStore updates worker status cleanly', () => {
   const worker = store.getWorker('hopper');
   assert.equal(worker?.status, 'reviewing');
 });
+
+test('WorkerStateStore resolves prefixed and aliased worker IDs from 3D avatars', () => {
+  const store = new WorkerStateStore();
+  assert.equal(store.selectWorker('worker-ada')?.id, 'ada');
+  assert.equal(store.selectWorker('worker-grace')?.id, 'hopper');
+  assert.equal(store.selectWorker('worker-alan')?.id, 'turing');
+  assert.equal(store.getWorker('worker-linus')?.id, 'linus');
+});
