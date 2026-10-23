@@ -3,6 +3,8 @@ import { OfficeRoom } from './scene/room';
 import { OfficeLighting } from './scene/lighting';
 import { OfficeCameraControls } from './controls/camera';
 import { UIOverlay } from './ui/overlay';
+import { OfficeWorkersManager } from './scene/office-workers.ts';
+import { WorkerSelectionManager } from './interactions/selection.ts';
 
 export class OfficeApp {
   public scene: THREE.Scene;
@@ -11,6 +13,8 @@ export class OfficeApp {
   public room: OfficeRoom;
   public lighting: OfficeLighting;
   public ui: UIOverlay;
+  public workersManager: OfficeWorkersManager;
+  public selectionManager: WorkerSelectionManager;
   public clock: THREE.Clock;
 
   private isRunning: boolean = false;
@@ -43,11 +47,25 @@ export class OfficeApp {
     this.lighting = new OfficeLighting(this.room.dimensions);
     this.scene.add(this.lighting.group);
 
+    // AI Coding Worker Pods & Workstations
+    this.workersManager = new OfficeWorkersManager();
+    this.scene.add(this.workersManager.group);
+
     // Camera & dampened OrbitControls
     this.cameraControls = new OfficeCameraControls(canvas);
 
     // UI Overlay
     this.ui = new UIOverlay();
+    this.ui.update({ agentCount: this.workersManager.workers.length });
+
+    // Interactive Worker Selection & Raycasting
+    this.selectionManager = new WorkerSelectionManager({
+      workersManager: this.workersManager,
+      canvas,
+      camera: this.cameraControls.camera,
+      cameraControls: this.cameraControls,
+      uiOverlay: this.ui,
+    });
 
     // Delta clock
     this.clock = new THREE.Clock();
@@ -80,6 +98,9 @@ export class OfficeApp {
     // Update dampened controls
     this.cameraControls.update();
 
+    // Update worker avatars animation loops
+    this.workersManager.update(delta);
+
     // Render frame
     this.renderer.render(this.scene, this.cameraControls.camera);
   };
@@ -108,6 +129,7 @@ export class OfficeApp {
 
   public destroy(): void {
     this.stop();
+    this.selectionManager.destroy();
     window.removeEventListener('resize', this.onResize);
     this.renderer.dispose();
   }
