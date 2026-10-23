@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import * as THREE from 'three';
 import { WorkerState } from './scene/worker-state.ts';
 import { Workstation } from './scene/workstation.ts';
 import { WorkerAvatar } from './scene/worker-avatar.ts';
 import { OfficeWorkersManager } from './scene/office-workers.ts';
-import type { WorkerConfig, WorkerStatus, WorkstationConfig } from './types/index.ts';
+import { WorkerSelectionManager } from './interactions/selection.ts';
+import type { WorkerConfig, WorkerStatus, WorkstationConfig, WorkerSelectedEventDetail } from './types/index.ts';
 
 test('WorkerState manages worker identity and transitions status', () => {
   const config: WorkerConfig = {
@@ -169,6 +171,51 @@ test('OfficeWorkersManager sets up workstations pod layout and manages workers',
   // Update animation loop
   manager.update(0.016);
 });
+
+test('WorkerSelectionManager handles selection, highlights, and event dispatch', () => {
+  const manager = new OfficeWorkersManager();
+  let dispatchedDetail: WorkerSelectedEventDetail | null = null;
+
+  const selection = new WorkerSelectionManager({
+    workersManager: manager,
+    onWorkerSelected: (detail) => {
+      dispatchedDetail = detail;
+    },
+  });
+
+  assert.equal(selection.selectedWorker, null);
+
+  // Select Ada
+  selection.selectWorker('worker-ada');
+  const ada = manager.getWorker('worker-ada');
+  const ws0 = manager.getWorkstation('ws-0');
+
+  assert.equal(selection.selectedWorker?.id, 'worker-ada');
+  assert.equal(ada?.isSelected, true);
+  assert.equal(ws0?.isHighlighted, true);
+  assert.ok(dispatchedDetail);
+  assert.equal(dispatchedDetail?.workerId, 'worker-ada');
+  assert.equal(dispatchedDetail?.name, 'Ada');
+
+  // Select Linus (should deselect Ada and unhighlight ws-0, highlight ws-1)
+  selection.selectWorker('worker-linus');
+  const linus = manager.getWorker('worker-linus');
+  const ws1 = manager.getWorkstation('ws-1');
+
+  assert.equal(selection.selectedWorker?.id, 'worker-linus');
+  assert.equal(ada?.isSelected, false);
+  assert.equal(ws0?.isHighlighted, false);
+  assert.equal(linus?.isSelected, true);
+  assert.equal(ws1?.isHighlighted, true);
+  assert.equal(dispatchedDetail?.name, 'Linus');
+
+  // Deselect
+  selection.deselect();
+  assert.equal(selection.selectedWorker, null);
+  assert.equal(linus?.isSelected, false);
+  assert.equal(ws1?.isHighlighted, false);
+});
+
 
 
 
