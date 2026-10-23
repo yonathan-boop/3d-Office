@@ -1,0 +1,176 @@
+:root {
+  --bg-color: #0f172a;
+  --panel-bg: rgba(15, 23, 42, 0.75);
+  --panel-border: rgba(148, 163, 184, 0.2);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent-green: #10b981;
+  --accent-blue: #38bdf8;
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-color);
+  font-family: var(--font-family);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#office-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 1;
+}
+
+/* UI Overlay - non-blocking for WebGL interactions */
+.ui-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.hud-header {
+  pointer-events: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--panel-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  max-width: 100%;
+}
+
+.hud-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hud-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.hud-dot.online {
+  background-color: var(--accent-green);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+
+.hud-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.hud-badge {
+  font-size: 0.7rem;
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.hud-metrics {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.metric-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.metric-val {
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: monospace;
+  color: var(--text-main);
+}
+
+.metric-val.status-online {
+  color: var(--accent-green);
+}
+
+/* Panel container for future worker terminals and monitoring cards */
+.hud-panels {
+  pointer-events: none;
+  flex: 1;
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 0;
+  overflow: hidden;
+}
+
+.hud-panel {
+  pointer-events: auto;
+}
+
+.hud-footer {
+  pointer-events: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.hud-controls-hint {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--panel-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+}
+
+.hud-controls-hint kbd {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.7rem;
+  margin-right: 0.25rem;
+}
