@@ -58,12 +58,89 @@ export class OfficeApp {
 
     // UI Overlay
     this.ui = new UIOverlay();
+    this.ui.setActivityEvents(this.stateManager.getEvents());
+    this.ui.updateKPIs(this.stateManager.getKPIs());
+
+    // Connect camera preset buttons
+    this.ui.onPresetSelect = (preset) => {
+      this.cameraControls.transitionTo(preset);
+    };
+
+    // State manager subscription updates HUD and 3D Command Wall
+    this.stateManager.subscribe(() => {
+      this.ui.updateKPIs(this.stateManager.getKPIs());
+      this.room.commandWall.update(this.stateManager.getKPIs(), this.stateManager.getEvents());
+    });
+
+    // Start background activity feed simulation
+    this.setupSimulation();
 
     // Delta clock
     this.clock = new THREE.Clock();
 
     // Event listeners
     window.addEventListener('resize', this.onResize);
+  }
+
+  private simCycle: number = 0;
+  private simTimer: number | null = null;
+
+  private setupSimulation(): void {
+    if (typeof window === 'undefined') return;
+
+    const scenarios = [
+      () => {
+        this.stateManager.setWorkerStatus('alan', 'coding', 'Task #5 HUD responsiveness');
+        const evt = this.stateManager.logEvent({
+          workerName: 'Agent Alan',
+          action: 'started task #5 (HUD responsiveness)',
+          type: 'task_started',
+        });
+        this.ui.addActivityEvent(evt);
+      },
+      () => {
+        this.stateManager.setWorkerStatus('ada', 'testing', 'Unit test assertions for #2');
+        const evt = this.stateManager.logEvent({
+          workerName: 'Agent Ada',
+          action: 'ran unit test suite (34 passing)',
+          type: 'test_run',
+        });
+        this.ui.addActivityEvent(evt);
+      },
+      () => {
+        this.stateManager.setWorkerStatus('linus', 'reviewing', 'PR #4 Status Dashboard');
+        const evt = this.stateManager.logEvent({
+          workerName: 'Agent Linus',
+          action: 'merged PR #4 (Real-time activity monitors)',
+          type: 'pr_merged',
+        });
+        this.ui.addActivityEvent(evt);
+      },
+      () => {
+        this.stateManager.setWorkerStatus('grace', 'coding', 'Workstation 3D avatar rig');
+        const evt = this.stateManager.logEvent({
+          workerName: 'Agent Grace',
+          action: 'committed 4 files to feature branch',
+          type: 'build_passed',
+        });
+        this.ui.addActivityEvent(evt);
+      },
+      () => {
+        this.stateManager.setWorkerStatus('alan', 'reviewing', 'PR #2 Avatars & Workstations');
+        const evt = this.stateManager.logEvent({
+          workerName: 'Agent Alan',
+          action: 'approved review for PR #2',
+          type: 'review_completed',
+        });
+        this.ui.addActivityEvent(evt);
+      },
+    ];
+
+    this.simTimer = window.setInterval(() => {
+      const scenario = scenarios[this.simCycle % scenarios.length];
+      this.simCycle++;
+      scenario();
+    }, 9000);
   }
 
   public start(): void {
@@ -123,6 +200,10 @@ export class OfficeApp {
 
   public destroy(): void {
     this.stop();
+    if (this.simTimer !== null) {
+      window.clearInterval(this.simTimer);
+      this.simTimer = null;
+    }
     window.removeEventListener('resize', this.onResize);
     this.statusBadges.destroy();
     this.renderer.dispose();
