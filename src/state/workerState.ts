@@ -1,4 +1,4 @@
-import type { WorkerProfile, WorkerStatus } from '../types';
+import type { WorkerProfile, WorkerStatus } from '../types/index.ts';
 
 export const DEFAULT_WORKERS: WorkerProfile[] = [
   {
