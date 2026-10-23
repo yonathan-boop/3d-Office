@@ -1,5 +1,5 @@
-import { ChatStore, fileToAttachment, formatFileSize, isValidImageType, readFileAsDataUrl } from '../chat/store';
-import type { ChatAttachment, ChatMessage } from '../types';
+import { ChatStore, fileToAttachment, formatFileSize, isValidImageType, readFileAsDataUrl } from '../chat/store.ts';
+import type { ChatAttachment, ChatMessage } from '../types/index.ts';
 
 export class ChatPanel {
   private store: ChatStore;

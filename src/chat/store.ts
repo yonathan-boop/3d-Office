@@ -1,4 +1,4 @@
-import type { ChatAttachment, ChatMessage, SendMessageOptions } from '../types';
+import type { ChatAttachment, ChatMessage, SendMessageOptions } from '../types/index.ts';
 
 export const ACCEPTED_IMAGE_TYPES = [
   'image/png',

@@ -1,6 +1,6 @@
-import type { HUDState } from '../types';
-import { ChatStore } from '../chat/store';
-import { ChatPanel } from './chat';
+import type { HUDState } from '../types/index.ts';
+import { ChatStore } from '../chat/store.ts';
+import { ChatPanel } from './chat.ts';
 
 export class UIOverlay {
   private container: HTMLElement;
