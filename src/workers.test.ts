@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { WorkerState } from './scene/worker-state.ts';
 import { Workstation } from './scene/workstation.ts';
+import { WorkerAvatar } from './scene/worker-avatar.ts';
 import type { WorkerConfig, WorkerStatus, WorkstationConfig } from './types/index.ts';
 
 test('WorkerState manages worker identity and transitions status', () => {
@@ -79,4 +80,61 @@ test('Workstation builds complete 3D desk setup with required parts', () => {
   ws.setHighlight(false);
   assert.equal(ws.isHighlighted, false);
 });
+
+test('WorkerAvatar builds seated avatar model, supports status and animations', () => {
+  const config: WorkerConfig = {
+    id: 'worker-ada',
+    name: 'Ada',
+    role: 'Lead Architect',
+    accentColor: 0x06b6d4,
+    avatarColor: 0x38bdf8,
+    initialStatus: 'idle',
+    workstationIndex: 0,
+  };
+
+  const state = new WorkerState(config);
+  const avatar = new WorkerAvatar(state);
+
+  assert.equal(avatar.id, 'worker-ada');
+  assert.ok(avatar.group, 'avatar group exists');
+  assert.equal(avatar.state.status, 'idle');
+
+  // Verify avatar body parts exist
+  const partNames: string[] = [];
+  avatar.group.traverse((obj) => {
+    if (obj.name) partNames.push(obj.name);
+  });
+
+  assert.ok(partNames.includes('avatar_head'), 'has avatar head');
+  assert.ok(partNames.includes('avatar_torso'), 'has avatar torso');
+  assert.ok(partNames.includes('avatar_arm_left'), 'has left arm');
+  assert.ok(partNames.includes('avatar_arm_right'), 'has right arm');
+  assert.ok(partNames.includes('avatar_hit_box'), 'has raycast hit box');
+  assert.ok(partNames.includes('avatar_nameplate'), 'has nameplate');
+
+  // Animation updates without crash
+  const initialArmY = avatar.leftForearm.rotation.x;
+  avatar.update(0.016); // 60 FPS delta
+  avatar.update(0.016);
+
+  // Transition to coding status
+  avatar.state.setStatus('coding');
+  assert.equal(avatar.state.status, 'coding');
+  avatar.update(0.05);
+  // Typing motion should animate forearm rotations
+  assert.notEqual(avatar.leftForearm.rotation.x, initialArmY);
+
+  // Transition to reviewing status
+  avatar.state.setStatus('reviewing');
+  assert.equal(avatar.state.status, 'reviewing');
+  avatar.update(0.1);
+
+  // Selection highlight test
+  assert.equal(avatar.isSelected, false);
+  avatar.setSelected(true);
+  assert.equal(avatar.isSelected, true);
+  avatar.setSelected(false);
+  assert.equal(avatar.isSelected, false);
+});
+
 
