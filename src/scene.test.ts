@@ -15,6 +15,7 @@ test('OfficeRoom builds geometry with expected dimensions and parts', () => {
   assert.ok(names.includes('wall_back'), 'back wall mesh exists');
   assert.ok(names.includes('wall_left'), 'left wall mesh exists');
   assert.ok(names.includes('wall_right'), 'right wall mesh exists');
+  assert.ok(names.includes('command_wall_display'), 'command wall display exists');
   assert.ok(names.some((n) => n.startsWith('ceiling_fixture_')), 'ceiling fixtures exist');
 });
 

@@ -1,8 +1,9 @@
 import * as THREE from 'three';
-import { OfficeRoom } from './scene/room';
-import { OfficeLighting } from './scene/lighting';
-import { OfficeCameraControls } from './controls/camera';
-import { UIOverlay } from './ui/overlay';
+import { OfficeRoom } from './scene/room.ts';
+import { OfficeLighting } from './scene/lighting.ts';
+import { OfficeCameraControls } from './controls/camera.ts';
+import { UIOverlay } from './ui/overlay.ts';
+import { OfficeStateManager } from './state/officeState.ts';
 
 export class OfficeApp {
   public scene: THREE.Scene;
@@ -11,6 +12,7 @@ export class OfficeApp {
   public room: OfficeRoom;
   public lighting: OfficeLighting;
   public ui: UIOverlay;
+  public stateManager: OfficeStateManager;
   public clock: THREE.Clock;
 
   private isRunning: boolean = false;
@@ -45,6 +47,9 @@ export class OfficeApp {
 
     // Camera & dampened OrbitControls
     this.cameraControls = new OfficeCameraControls(canvas);
+
+    // Office State Manager
+    this.stateManager = new OfficeStateManager();
 
     // UI Overlay
     this.ui = new UIOverlay();
@@ -91,7 +96,9 @@ export class OfficeApp {
       if (delta > 0) {
         this.currentFps = 1 / delta;
       }
+      this.stateManager.setFps(this.currentFps);
       this.ui.update({ fps: this.currentFps });
+      this.room.commandWall.update(this.stateManager.getKPIs(), this.stateManager.getEvents());
       this.lastFpsUpdate = now;
       this.frameCount = 0;
     }
