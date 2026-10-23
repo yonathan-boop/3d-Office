@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import type { RoomDimensions } from '../types';
+import type { RoomDimensions } from '../types/index.ts';
+import { CommandWallScreen } from './commandWall.ts';
 
 /**
  * Creates a procedural canvas texture for tiled office floor.
@@ -96,10 +97,12 @@ function createCeilingTexture(): THREE.CanvasTexture | null {
 export class OfficeRoom {
   public group: THREE.Group;
   public dimensions: RoomDimensions;
+  public commandWall: CommandWallScreen;
 
   constructor(dimensions: RoomDimensions = { width: 16, height: 4, depth: 16 }) {
     this.dimensions = dimensions;
     this.group = new THREE.Group();
+    this.commandWall = new CommandWallScreen(6.4, 2.2, [0, 2.3, -dimensions.depth / 2 + 0.08]);
     this.buildRoom();
   }
 
@@ -219,6 +222,9 @@ export class OfficeRoom {
 
     // Suspended ceiling light fixtures
     this.addCeilingFixtures();
+
+    // Wall-mounted command monitor display
+    this.group.add(this.commandWall.group);
   }
 
   private addCeilingFixtures(): void {

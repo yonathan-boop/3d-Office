@@ -17,11 +17,51 @@ export interface OfficeSceneConfig {
   camera: CameraConfig;
 }
 
+export type ActivityStatus = 'idle' | 'coding' | 'reviewing' | 'testing';
+
+export interface WorkerState {
+  id: string;
+  name: string;
+  pod: 'Dev Pod 1' | 'Dev Pod 2';
+  status: ActivityStatus;
+  currentTask?: string;
+  position: [number, number, number];
+  avatarColor: string;
+}
+
+export interface OfficeKPIs {
+  activeWorkers: number;
+  idleWorkers: number;
+  tasksInProgress: number;
+  commitsPerHour: number;
+  fps: number;
+}
+
+export type ActivityEventType = 'task_started' | 'pr_merged' | 'build_passed' | 'review_completed' | 'test_run';
+
+export interface ActivityEvent {
+  id: string;
+  timestamp: number;
+  workerName: string;
+  action: string;
+  type: ActivityEventType;
+}
+
+export type CameraPresetName = 'overview' | 'devPod1' | 'devPod2' | 'commandWall';
+
+export interface CameraPreset {
+  name: CameraPresetName;
+  label: string;
+  position: [number, number, number];
+  target: [number, number, number];
+}
+
 export interface HUDState {
   title: string;
   status: 'online' | 'connecting' | 'offline';
   agentCount: number;
   fps: number;
+  kpis?: OfficeKPIs;
 }
 
 export type ChatSenderRole = 'manager' | 'worker' | 'system';

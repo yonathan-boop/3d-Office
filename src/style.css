@@ -103,9 +103,54 @@ html, body {
   border-radius: 4px;
 }
 
+/* Camera Navigation Presets Toolbar */
+.camera-presets-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.nav-label {
+  font-size: 0.62rem;
+  font-family: monospace;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  padding: 0 4px;
+}
+
+.camera-preset-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.camera-preset-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.camera-preset-btn.active {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.2);
+}
+
 .hud-metrics {
   display: flex;
-  gap: 1.25rem;
+  align-items: center;
+  gap: 1.1rem;
 }
 
 .metric-item {
@@ -115,7 +160,7 @@ html, body {
 }
 
 .metric-label {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   text-transform: uppercase;
   color: var(--text-muted);
   letter-spacing: 0.04em;
@@ -128,19 +173,273 @@ html, body {
   color: var(--text-main);
 }
 
-.metric-val.status-online {
-  color: var(--accent-green);
+.metric-val.text-cyan {
+  color: #38bdf8;
 }
 
-/* Panel container for future worker terminals and monitoring cards */
+.metric-val.text-amber {
+  color: #f59e0b;
+}
+
+.metric-val.text-purple {
+  color: #c084fc;
+}
+
+.metric-val.text-emerald {
+  color: #34d399;
+}
+
+.feed-toggle-btn {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: var(--text-main);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.feed-toggle-btn:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: #38bdf8;
+}
+
+.feed-toggle-btn.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+
+.feed-icon {
+  font-size: 0.8rem;
+}
+
+/* Panel container */
 .hud-panels {
   pointer-events: none;
   flex: 1;
   display: flex;
-  gap: 1rem;
+  justify-content: flex-end;
   padding: 1rem 0;
   overflow: hidden;
+  position: relative;
 }
+
+/* Collapsible Real-Time Activity Feed Sidebar */
+.activity-feed-panel {
+  pointer-events: auto;
+  width: 340px;
+  max-width: 90vw;
+  max-height: calc(100vh - 160px);
+  display: flex;
+  flex-direction: column;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  overflow: hidden;
+}
+
+.activity-feed-panel.collapsed {
+  transform: translateX(380px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.feed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  background: rgba(30, 41, 59, 0.4);
+}
+
+.feed-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.feed-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.feed-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.feed-count-badge {
+  font-size: 0.65rem;
+  font-family: monospace;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.feed-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.feed-close-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.activity-feed-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.activity-feed-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.activity-feed-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.activity-feed-list::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 4px;
+}
+
+.activity-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 6px;
+  background: rgba(30, 41, 59, 0.5);
+  border-left: 3px solid #64748b;
+  font-size: 0.75rem;
+  animation: slideInFeed 0.25s ease-out;
+}
+
+@keyframes slideInFeed {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.activity-item.type-pr_merged {
+  border-left-color: #10b981;
+}
+
+.activity-item.type-task_started {
+  border-left-color: #38bdf8;
+}
+
+.activity-item.type-build_passed {
+  border-left-color: #34d399;
+}
+
+.activity-item.type-review_completed {
+  border-left-color: #c084fc;
+}
+
+.activity-item.type-test_run {
+  border-left-color: #f59e0b;
+}
+
+.activity-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.activity-time {
+  font-family: monospace;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.activity-type-tag {
+  font-family: monospace;
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.type-pr_merged .activity-type-tag {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+}
+
+.type-task_started .activity-type-tag {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.type-review_completed .activity-type-tag {
+  color: #c084fc;
+  background: rgba(192, 132, 252, 0.15);
+}
+
+.activity-item-body {
+  display: flex;
+  gap: 0.35rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.activity-worker {
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.activity-action {
+  color: #cbd5e1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .hud-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .camera-presets-nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 
 .hud-panel {
   pointer-events: auto;
@@ -397,6 +696,7 @@ html, body {
 
 /* Chat Panel Component */
 .chat-panel {
+  pointer-events: auto;
   width: 360px;
   max-width: 100%;
   height: 100%;
@@ -922,6 +1222,101 @@ html, body {
     max-height: 50vh;
     border-radius: 8px 8px 0 0;
   }
+}
+
+/* Floating In-World Status Badges */
+.status-badges-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.worker-status-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.badge-name {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.badge-status-label {
+  font-size: 0.65rem;
+  font-family: monospace;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.status-coding .badge-status-label {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.status-reviewing .badge-status-label {
+  color: #c084fc;
+  background: rgba(192, 132, 252, 0.15);
+}
+
+.status-testing .badge-status-label {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+}
+
+.status-idle .badge-status-label {
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.15);
+}
+
+.badge-task-hint {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-family: monospace;
+  background: rgba(15, 23, 42, 0.85);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 /* ==========================================================================
