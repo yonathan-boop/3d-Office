@@ -83,7 +83,7 @@ export class OfficeApp {
     this.updateFps(delta);
 
     // Update dampened controls
-    this.cameraControls.update();
+    this.cameraControls.update(delta);
 
     // Render frame
     this.renderer.render(this.scene, this.cameraControls.camera);
