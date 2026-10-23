@@ -63,3 +63,43 @@ export interface HUDState {
   fps: number;
   kpis?: OfficeKPIs;
 }
+
+export type WorkerStatus = 'idle' | 'coding' | 'reviewing';
+
+export interface WorkerStats {
+  currentTask: string;
+  tasksCompleted: number;
+  linesOfCode: number;
+  cpuUsage: number;
+}
+
+export interface WorkerConfig {
+  id: string;
+  name: string;
+  role: string;
+  accentColor: number;
+  avatarColor: number;
+  initialStatus: WorkerStatus;
+  workstationIndex: number;
+  stats?: Partial<WorkerStats>;
+}
+
+export interface WorkstationConfig {
+  id: string;
+  position: [number, number, number];
+  rotation: number;
+  deskColor?: number;
+  monitorCount?: number;
+}
+
+export interface WorkerSelectedEventDetail {
+  workerId: string;
+  name: string;
+  role: string;
+  status: WorkerStatus;
+  currentTask: string;
+  stats: WorkerStats;
+  workstationId: string;
+  position: [number, number, number];
+}
+

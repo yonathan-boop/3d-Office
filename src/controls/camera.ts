@@ -40,6 +40,7 @@ export const DEFAULT_CAMERA_CONFIG: CameraConfig = {
 export class OfficeCameraControls {
   public camera: THREE.PerspectiveCamera;
   public controls: OrbitControls;
+  public initialConfig: CameraConfig;
 
   private currentPreset: CameraPresetName | null = 'overview';
   private inTransition: boolean = false;
@@ -55,6 +56,7 @@ export class OfficeCameraControls {
     aspect: number = typeof window !== 'undefined' ? window.innerWidth / window.innerHeight : 16 / 9,
     config: CameraConfig = DEFAULT_CAMERA_CONFIG
   ) {
+    this.initialConfig = config;
     this.camera = new THREE.PerspectiveCamera(
       config.fov,
       aspect,
@@ -105,6 +107,30 @@ export class OfficeCameraControls {
     this.targetTarget.set(...preset.target);
   }
 
+  public focusOn(target: THREE.Vector3, cameraPosition?: THREE.Vector3, duration: number = 0.8): void {
+    this.currentPreset = null;
+    this.inTransition = true;
+    this.transitionElapsed = 0;
+    this.transitionDuration = Math.max(0.01, duration);
+
+    this.startPosition.copy(this.camera.position);
+    if (cameraPosition) {
+      this.targetPosition.copy(cameraPosition);
+    } else {
+      this.targetPosition.copy(this.camera.position);
+    }
+
+    this.startTarget.copy(this.controls.target);
+    this.targetTarget.copy(target);
+  }
+
+  public resetView(): void {
+    const target = new THREE.Vector3(...this.initialConfig.target);
+    const pos = new THREE.Vector3(...this.initialConfig.initialPosition);
+    this.focusOn(target, pos);
+    this.currentPreset = 'overview';
+  }
+
   public isTransitioning(): boolean {
     return this.inTransition;
   }
@@ -130,7 +156,6 @@ export class OfficeCameraControls {
         this.inTransition = false;
       }
     }
-
     this.controls.update();
   }
 
@@ -140,3 +165,4 @@ export class OfficeCameraControls {
     this.camera.updateProjectionMatrix();
   }
 }
+

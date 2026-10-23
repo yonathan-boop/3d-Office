@@ -5,6 +5,8 @@ import { OfficeCameraControls } from './controls/camera.ts';
 import { UIOverlay } from './ui/overlay.ts';
 import { OfficeStateManager } from './state/officeState.ts';
 import { StatusBadgeOverlay } from './ui/statusBadges.ts';
+import { OfficeWorkersManager } from './scene/office-workers.ts';
+import { WorkerSelectionManager } from './interactions/selection.ts';
 
 export class OfficeApp {
   public scene: THREE.Scene;
@@ -15,6 +17,8 @@ export class OfficeApp {
   public ui: UIOverlay;
   public statusBadges: StatusBadgeOverlay;
   public stateManager: OfficeStateManager;
+  public workersManager: OfficeWorkersManager;
+  public selectionManager: WorkerSelectionManager;
   public clock: THREE.Clock;
 
   private isRunning: boolean = false;
@@ -47,6 +51,10 @@ export class OfficeApp {
     this.lighting = new OfficeLighting(this.room.dimensions);
     this.scene.add(this.lighting.group);
 
+    // AI Coding Worker Pods & Workstations
+    this.workersManager = new OfficeWorkersManager();
+    this.scene.add(this.workersManager.group);
+
     // Camera & dampened OrbitControls
     this.cameraControls = new OfficeCameraControls(canvas);
 
@@ -58,6 +66,7 @@ export class OfficeApp {
 
     // UI Overlay
     this.ui = new UIOverlay();
+    this.ui.update({ agentCount: this.workersManager.workers.length });
     this.ui.setActivityEvents(this.stateManager.getEvents());
     this.ui.updateKPIs(this.stateManager.getKPIs());
 
@@ -71,6 +80,33 @@ export class OfficeApp {
       this.ui.updateKPIs(this.stateManager.getKPIs());
       this.room.commandWall.update(this.stateManager.getKPIs(), this.stateManager.getEvents());
     });
+
+    // Interactive Worker Selection & Raycasting
+    this.selectionManager = new WorkerSelectionManager({
+      workersManager: this.workersManager,
+      canvas,
+      camera: this.cameraControls.camera,
+      cameraControls: this.cameraControls,
+      uiOverlay: this.ui,
+    });
+
+    // Sync worker positions for status badges with 3D avatar coordinates
+    this.scene.updateMatrixWorld(true);
+    const workerIdMap: Record<string, string> = {
+      ada: 'worker-ada',
+      linus: 'worker-linus',
+      grace: 'worker-grace',
+      alan: 'worker-alan',
+    };
+    for (const [stateId, avatarId] of Object.entries(workerIdMap)) {
+      const avatar = this.workersManager.getWorker(avatarId);
+      const stateWorker = this.stateManager.getWorker(stateId);
+      if (avatar && stateWorker) {
+        const wp = new THREE.Vector3();
+        avatar.hitBox.getWorldPosition(wp);
+        stateWorker.position = [wp.x, wp.y, wp.z];
+      }
+    }
 
     // Start background activity feed simulation
     this.setupSimulation();
@@ -170,6 +206,9 @@ export class OfficeApp {
     // Update floating status badges pinned above workers
     this.statusBadges.update(this.cameraControls.camera, this.stateManager.getWorkers());
 
+    // Update worker avatars animation loops
+    this.workersManager.update(delta);
+
     // Render frame
     this.renderer.render(this.scene, this.cameraControls.camera);
   };
@@ -204,6 +243,7 @@ export class OfficeApp {
       window.clearInterval(this.simTimer);
       this.simTimer = null;
     }
+    this.selectionManager.destroy();
     window.removeEventListener('resize', this.onResize);
     this.statusBadges.destroy();
     this.renderer.dispose();
