@@ -1,4 +1,6 @@
 import type { HUDState } from '../types';
+import { ChatStore } from '../chat/store';
+import { ChatPanel } from './chat';
 
 export class UIOverlay {
   private container: HTMLElement;
@@ -6,7 +8,10 @@ export class UIOverlay {
   private statusElement: HTMLElement | null = null;
   private agentCountElement: HTMLElement | null = null;
 
-  constructor(containerId: string = 'ui-overlay') {
+  public chatStore: ChatStore;
+  public chatPanel: ChatPanel;
+
+  constructor(containerId: string = 'ui-overlay', chatStore?: ChatStore) {
     const el = document.getElementById(containerId);
     if (!el) {
       this.container = document.createElement('div');
@@ -16,7 +21,13 @@ export class UIOverlay {
     } else {
       this.container = el;
     }
+
+    this.chatStore = chatStore || new ChatStore();
     this.render();
+
+    const panelsContainer = this.getPanelsContainer() || this.container;
+    this.chatPanel = new ChatPanel(this.chatStore);
+    this.chatPanel.mount(panelsContainer);
   }
 
   private render(): void {
