@@ -4,6 +4,7 @@ import { OfficeLighting } from './scene/lighting.ts';
 import { OfficeCameraControls } from './controls/camera.ts';
 import { UIOverlay } from './ui/overlay.ts';
 import { OfficeStateManager } from './state/officeState.ts';
+import { StatusBadgeOverlay } from './ui/statusBadges.ts';
 
 export class OfficeApp {
   public scene: THREE.Scene;
@@ -12,6 +13,7 @@ export class OfficeApp {
   public room: OfficeRoom;
   public lighting: OfficeLighting;
   public ui: UIOverlay;
+  public statusBadges: StatusBadgeOverlay;
   public stateManager: OfficeStateManager;
   public clock: THREE.Clock;
 
@@ -51,6 +53,9 @@ export class OfficeApp {
     // Office State Manager
     this.stateManager = new OfficeStateManager();
 
+    // Floating In-World Status Badges Overlay
+    this.statusBadges = new StatusBadgeOverlay();
+
     // UI Overlay
     this.ui = new UIOverlay();
 
@@ -85,6 +90,9 @@ export class OfficeApp {
     // Update dampened controls
     this.cameraControls.update(delta);
 
+    // Update floating status badges pinned above workers
+    this.statusBadges.update(this.cameraControls.camera, this.stateManager.getWorkers());
+
     // Render frame
     this.renderer.render(this.scene, this.cameraControls.camera);
   };
@@ -116,6 +124,7 @@ export class OfficeApp {
   public destroy(): void {
     this.stop();
     window.removeEventListener('resize', this.onResize);
+    this.statusBadges.destroy();
     this.renderer.dispose();
   }
 }
